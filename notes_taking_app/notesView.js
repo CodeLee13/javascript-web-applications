@@ -1,68 +1,68 @@
 class NotesView {
-    constructor(model, client) {
-      this.model = model;
-      this.client = client;
-  
-      this.mainEl = document.querySelector('#main');
-      this.msgInput = document.querySelector('#message-input');
-      this.submitBtn = document.querySelector('#message-submit');
-      this.resetBtn = document.querySelector('#reset');
-      this.infoBar = document.querySelector('#infoBar');
-  
-      this.submitBtn.addEventListener('click', () => {
-        const newNote = this.msgInput.value;
-        this.client.createNote(
-          newNote,
-          () => this.displayNotesFromApi(),
-          (error) => {
-            this.displayError(error);
-          }
-        );
-      });
-  
-      this.resetBtn.addEventListener('click', () => {
-        this.resetAllNotes();
-      });
-    }
-  
-    displayNotes() {
-      // clear current notes
-      this.msgInput.value = '';
-  
-      const divs = document.querySelectorAll('.note');
-      divs.forEach((note) => note.remove());
-  
-      const notes = this.model.getNotes();
-      notes.forEach((note) => {
-        const new_element = document.createElement('div');
-        new_element.className = 'note';
-        new_element.textContent = note;
-        this.mainEl.append(new_element);
-      });
-    }
-  
-    displayNotesFromApi() {
-      this.client.loadNotes(
-        (response) => {
-          this.model.setNotes(response);
-          this.displayNotes();
-        },
-        (error) => {
-          this.displayError(error);
-        }
-      );
-    }
-  
-    resetAllNotes() {
-      this.client.reset(
-        () => this.displayNotesFromApi(),
-        (error) => this.displayError(error)
-      );
-    }
-  
-    displayError(error) {
-      this.infoBar.textContent = error.message;
-    }
+  constructor(model, client) {
+    this.model = model;
+    this.client = client;
+    this.mainContainerEl = document.querySelector("#main-container");
+
+    document.querySelector("#add-note-btn").addEventListener("click", () => {
+      const newNote = document.querySelector("#add-note-input").value;
+      this.addNewNote(newNote);
+    });
+
+    document.querySelector("#reset-btn").addEventListener("click", () => {
+      this.resetNotes();
+    });
   }
-  
-  module.exports = NotesView;
+
+  displayNotes() {
+    // clears input box
+    document.querySelector("#add-note-input").value = null;
+    // clear all previous notes
+    document.querySelectorAll(".note").forEach((element) => {
+      element.remove();
+    });
+
+    const notes = this.model.getNotes();
+
+    // for each note, create and append a new element on the main container
+    notes.forEach((note) => {
+      const noteEl = document.createElement("div");
+      // this will check for any emoji text (:smiley:) and convert it to the emoji
+      this.client.emojify(note, (response) => {
+        noteEl.textContent = response.emojified_text;
+      });
+      noteEl.className = "note";
+      this.mainContainerEl.append(noteEl);
+    });
+  }
+
+  displayNotesFromApi() {
+    this.client.loadNotes((response) => {
+      this.model.setNotes(response);
+      this.displayNotes();
+    });
+  }
+
+  addNewNote(newNote) {
+    this.client
+      .createNote(newNote, () => {
+        this.displayError();
+      })
+      .then(() => this.displayNotesFromApi());
+  }
+
+  resetNotes() {
+    this.client
+      .reset(() => this.displayError())
+      .then(() => this.displayNotesFromApi());
+  }
+
+  displayError() {
+    const errorMessage = document.createElement("div");
+    errorMessage.textContent = "Oops, something went wrong!";
+    errorMessage.className = "error";
+    this.mainContainerEl.append(errorMessage);
+  }
+}
+
+module.exports = NotesView;
