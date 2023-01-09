@@ -12,4 +12,6 @@ class CounterModel {
   }
 }
 
+console.log()
+
 module.exports = CounterModel;

@@ -10,7 +10,6 @@
       var CounterModel2 = class {
         constructor() {
           this.counter = 0;
-          console.log("hey");
         }
         getCounter() {
           return this.counter;
@@ -19,6 +18,7 @@
           this.counter++;
         }
       };
+      console.log();
       module.exports = CounterModel2;
     }
   });
